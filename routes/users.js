@@ -6,9 +6,20 @@ const authenticate = require("../authenticate");
 const router = express.Router();
 
 /* GET users listing. */
-router.get("/", function (req, res, next) {
-  res.send("respond with a resource");
-});
+router.get(
+  "/",
+  authenticate.verifyUser,
+  authenticate.verifyAdmin,
+  function (req, res, next) {
+    User.find()
+      .then((users) => {
+        res.statusCode = 200;
+        res.setHeader("Content-Type", "application/json");
+        res.json(users);
+      })
+      .catch((err) => next(err));
+  }
+);
 
 router.post("/signup", (req, res) => {
   User.register(
@@ -45,7 +56,8 @@ router.post("/signup", (req, res) => {
 });
 
 router.post("/login", passport.authenticate("local"), (req, res) => {
-  const token = authenticate.getToken({ id: req.user._id });
+  const token = authenticate.getToken({ _id: req.user._id });
+  console.log(token);
   res.statusCode = 200;
   res.setHeader("Content-Type", "application/json");
   res.json({
